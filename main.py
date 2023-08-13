@@ -3,8 +3,9 @@ import pygame
 
 # pygame setup
 pygame.init()
-screen = pygame.display.set_mode((1280, 720))
-
+screen = pygame.display.set_mode((720, 720))
+screen_height = screen.get_height()
+screen_width = screen.get_width()
 """
 In the context of game development, a clock is often used to control the timing of various events within the game. 
 Games typically need to update their graphics, physics, and logic at a consistent rate, and a clock helps ensure that these updates happen at a regular interval.
@@ -20,7 +21,9 @@ clock = pygame.time.Clock()
 running = True
 
 dt = 0
-player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
+player_pos = pygame.Vector2(screen_width / 2, screen_height - 100)
+player_size = 20
+
 
 while running:
     # poll for events
@@ -30,20 +33,30 @@ while running:
             running = False
 
     # fill the screen with a color to wipe away anything from last frame
-    screen.fill("purple")
+    screen.fill("white")
 
     # RENDER YOUR GAME HERE
-    pygame.draw.circle(screen, "black", player_pos, 20)
+    pygame.draw.circle(screen, "black", player_pos, player_size)
 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_w]:
-        player_pos.y -= 300 * dt
+        # Shoot projectiles
+        pass
     if keys[pygame.K_s]:
-        player_pos.y += 300 * dt
+        # Maybe add a power up system to have once in a while AoE attack
+        pass
     if keys[pygame.K_a]:
-        player_pos.x -= 300 * dt
+        # Check if we have hit a wall
+        left_pos = player_pos.x - 200 * dt
+        if not left_pos < player_size:
+            player_pos.x = left_pos
     if keys[pygame.K_d]:
-        player_pos.x += 300 * dt
+        # Check if we have hit a wall
+        right_pos = player_pos.x + 200 * dt
+        if not right_pos + player_size >= screen_width:
+            player_pos.x = right_pos
+
+    print("X: ", player_pos.x, " Player Size: ", player_size)
 
     # flip() the display to put your work on screen
     pygame.display.flip()
