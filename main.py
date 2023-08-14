@@ -1,9 +1,10 @@
 # Example file showing a basic pygame "game loop"
 import pygame
+from Projectile import Projectile
 
 # pygame setup
 pygame.init()
-screen = pygame.display.set_mode((720, 720))
+screen = pygame.display.set_mode((500, 500))
 screen_height = screen.get_height()
 screen_width = screen.get_width()
 """
@@ -21,9 +22,11 @@ clock = pygame.time.Clock()
 running = True
 
 dt = 0
-player_pos = pygame.Vector2(screen_width / 2, screen_height - 100)
+player_pos = pygame.Vector2(screen_width / 2, screen_height - 50)
 player_size = 20
 
+projectiles = []
+last_shot_time = 0  # Initialize this at the beginning of your code
 
 while running:
     # poll for events
@@ -35,13 +38,23 @@ while running:
     # fill the screen with a color to wipe away anything from last frame
     screen.fill("white")
 
+    for index, projectile in enumerate(projectiles):
+        projectile.move(dt)
+        if projectile.pos.y <= 0:
+            del projectiles[index]
+        pygame.draw.circle(screen, "red", (int(projectile.pos.x), int(projectile.pos.y)), 5)
+
+
     # RENDER YOUR GAME HERE
     pygame.draw.circle(screen, "black", player_pos, player_size)
-
     keys = pygame.key.get_pressed()
     if keys[pygame.K_w]:
         # Shoot projectiles
-        pass
+        current_time = pygame.time.get_ticks()  # Get the current time in milliseconds
+        if current_time - last_shot_time >= 500:  # 500 milliseconds cooldown
+            new_projectile = Projectile(player_pos.x, player_pos.y, screen)
+            projectiles.append(new_projectile)
+            last_shot_time = current_time
     if keys[pygame.K_s]:
         # Maybe add a power up system to have once in a while AoE attack
         pass
@@ -56,7 +69,7 @@ while running:
         if not right_pos + player_size >= screen_width:
             player_pos.x = right_pos
 
-    print("X: ", player_pos.x, " Player Size: ", player_size)
+    # print("X: ", player_pos.x, " Player Size: ", player_size)
 
     # flip() the display to put your work on screen
     pygame.display.flip()
