@@ -1,0 +1,23 @@
+# Screen dimensions
+SCREEN_WIDTH = 500
+SCREEN_HEIGHT = 500
+
+# Player properties
+PLAYER_SIZE = 5
+PLAYER_SPEED_X = 200
+PLAYER_COLOR = "black"
+
+# Projectile properties
+PROJECTILE_SPEED = 400
+PROJECTILE_COOLDOWN = 500  # milliseconds
+PROJECTILE_SIZE = 3
+PROJECTILE_COLOR = "red"
+
+# Enemy properties
+ENEMY_SIZE = 10
+ENEMY_SPEED_X = 50
+ENEMY_SPEED_Y = 400
+ENEMY_COLUMNS = 8
+ENEMY_ROWS = 3
+ENEMY_SPACING = 40
+ENEMY_COLOR = "green"
