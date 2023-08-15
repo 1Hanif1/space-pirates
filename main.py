@@ -1,7 +1,7 @@
 # Example file showing a basic pygame "game loop"
 import pygame
-from Projectile import Projectile
-from Enemy import Enemy
+from projectile import Projectile
+from enemy import Enemy
 from variables import *
 
 # pygame setup
