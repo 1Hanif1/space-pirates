@@ -9,3 +9,10 @@ class Projectile:
 
     def move(self, dt):
         self.pos.y -= self.speed * dt
+
+    def check_collision(self, enemies):
+        for enemy in enemies:
+            # Adjust the radius as needed
+            if self.pos.distance_to(enemy.pos) < (ENEMY_SIZE + 5):
+                return enemy
+        return None

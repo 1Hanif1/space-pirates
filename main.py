@@ -40,14 +40,20 @@ for row in range(ENEMY_ROWS):
 enemies = []
 enemies_move_forward = True
 enemies_move_downward = False
+num_of_enemies = len(enemy_positions)
 projectiles = []  # All projectiles shot by player
 last_shot_time = 0  # Initialize this at the beginning of your code
 
-for positions in enemy_positions:
-    (pos_x, pos_y) = positions
-    # enemy_pos = pygame.Vector2(pos_x, pos_y)
-    new_enemy = Enemy(pos_x, pos_y)
-    enemies.append(new_enemy)
+
+def create_enemies():
+    for positions in enemy_positions:
+        (pos_x, pos_y) = positions
+        # enemy_pos = pygame.Vector2(pos_x, pos_y)
+        new_enemy = Enemy(pos_x, pos_y)
+        enemies.append(new_enemy)
+
+
+create_enemies()
 
 
 while running:
@@ -70,6 +76,20 @@ while running:
             (int(projectile.pos.x), int(projectile.pos.y)),
             PROJECTILE_SIZE
         )
+
+        # Check for collision with enemies
+        collided_enemy = projectile.check_collision(enemies)
+        if collided_enemy:
+            projectiles.remove(projectile)
+            enemies.remove(collided_enemy)
+
+        if len(enemies) < num_of_enemies / 2:
+            for enemy in enemies:
+                enemy.speed_x += ENEMY_SPEED_X
+            num_of_enemies /= 2
+
+    if (len(enemies) == 0):
+        create_enemies()
 
     # RENDER YOUR GAME HERE
     pygame.draw.circle(screen, PLAYER_COLOR, player_pos, PLAYER_SIZE)
