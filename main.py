@@ -1,6 +1,7 @@
 # Example file showing a basic pygame "game loop"
 import pygame
 import random
+import math
 from pygame.sprite import Group
 from modules.classes.projectile import Projectile
 from modules.classes.enemy import Enemy
@@ -12,36 +13,16 @@ pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
 
-# Variables
-running = True
-dt = 0
 player_pos = pygame.Vector2(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 50)
-first_enemy_x = 30
-first_enemy_y = 30
-enemy_positions = []  # Starting positions of enemies
-enemies = []
-enemies_move_forward = True
-enemies_move_downward = False
-num_of_enemies = 0
-projectiles = []  # All projectiles shot by player
-enemy_projectiles = []
-last_shot_time = 0  # Initialize this at the beginning of your code
-enemy_last_shot_time = 0
 font = pygame.font.Font(
     './Assets/Font/PressStart2P-regular.ttf',
     GAME_FONT_SIZE
 )
-player_score = 0
-high_score = 0
-is_starting_page = True
 
-
-for row in range(ENEMY_ROWS):
-    for column in range(ENEMY_COLUMNS):
-        enemy_positions.append((first_enemy_x, first_enemy_y))
-        first_enemy_x += ENEMY_SPACING
-    first_enemy_y += (ENEMY_SPACING - 20)
-    first_enemy_x = 30
+background_image = pygame.image.load("./Assets/Images/bg.jpg")
+background_image = pygame.transform.scale(
+    background_image, (SCREEN_WIDTH, SCREEN_HEIGHT)
+)
 
 
 try:
@@ -52,26 +33,42 @@ except FileNotFoundError:
     with open("high_score.txt", "w") as f:
         f.write(str(high_score))
 
-# Replace with your image file path
-background_image = pygame.image.load("./Assets/Images/bg.jpg")
-background_image = pygame.transform.scale(
-    background_image, (SCREEN_WIDTH, SCREEN_HEIGHT)
-)
+
+def create_number_of_enemies(enemy_rows, enemy_columns, enemy_spacing):
+    global first_enemy_x, first_enemy_y
+
+    for row in range(enemy_rows):
+        for column in range(enemy_columns):
+            enemy_positions.append((first_enemy_x, first_enemy_y))
+            first_enemy_x += enemy_spacing
+
+        first_enemy_y += (enemy_spacing - 20)
+        first_enemy_x = 30
 
 
-def render_score(screen):
+create_number_of_enemies(ENEMY_ROWS, ENEMY_COLUMNS, ENEMY_SPACING)
+
+
+def render_score_card(screen):
     global font
 
     # Current Score
     text_surface = font.render(f"Score: {player_score}", True, FONT_COLOR)
     text_rect = text_surface.get_rect()
-    text_rect.center = (SCREEN_WIDTH / 3, 10)
+    text_rect.center = (SCREEN_WIDTH / 6, 10)
     screen.blit(text_surface, text_rect)
 
     # High Score
-    text_surface = font.render(f"High Score: {high_score}", True, FONT_COLOR)
+    text_surface = font.render(
+        f"High Score: {high_score if high_score > player_score else player_score}", True, FONT_COLOR)
     text_rect = text_surface.get_rect()
-    text_rect.center = (SCREEN_WIDTH / 2 + SCREEN_WIDTH / 8, 10)
+    text_rect.center = (SCREEN_WIDTH / 2, 10)
+    screen.blit(text_surface, text_rect)
+
+    # Number of Rounds
+    text_surface = font.render(f"Round: {player_round + 1}", True, FONT_COLOR)
+    text_rect = text_surface.get_rect()
+    text_rect.center = (SCREEN_WIDTH / 2 + SCREEN_WIDTH / 3, 10)
     screen.blit(text_surface, text_rect)
 
 
@@ -149,12 +146,27 @@ def check_enemy_projectile_collision(enemy_projectiles, player_pos):
             return True
 
 
+def check_enemy_passed_player(player_pos, enemies):
+    for enemy in enemies:
+        if enemy.pos.y >= player_pos.y:
+            return True
+
+
 def reset_game():
-    global enemies, projectiles, enemy_projectiles, player_score
+    global ENEMY_ROWS, ENEMY_COLUMNS, ENEMY_SPACING, enemies, projectiles, enemy_projectiles, player_score, first_enemy_x, first_enemy_y, enemy_positions, num_of_enemies, player_round
     enemies.clear()
     projectiles.clear()
     enemy_projectiles.clear()
     player_score = 0
+    first_enemy_x = 30
+    first_enemy_y = 30
+    enemy_positions = []
+    num_of_enemies = 0
+    ENEMY_ROWS = 1
+    ENEMY_COLUMNS = 1
+    player_round = 0
+    reset_enemy_positions()
+    create_number_of_enemies(ENEMY_ROWS, ENEMY_COLUMNS, ENEMY_SPACING)
     create_enemies()
     pass
 
@@ -184,6 +196,29 @@ def render_start_page():
     high_score_rect.center = (
         SCREEN_WIDTH / 2, (SCREEN_HEIGHT / 2) + (SCREEN_HEIGHT / 4))
     return (logo_image, start_text_surface, start_text_rect, high_score_text, high_score_rect)
+
+
+def reset_enemy_positions():
+    global first_enemy_x, first_enemy_y, enemy_positions, num_of_enemies
+    first_enemy_x = 30
+    first_enemy_y = 30
+    enemy_positions = []
+    num_of_enemies = 0
+
+
+def check_number_of_enemies(enemies):
+    global ENEMY_ROWS, ENEMY_COLUMNS, MAX_ENEMY_ROWS, MAX_ENEMY_COLUMNS, ENEMY_SPACING, player_round, num_of_enemies, enemy_positions
+    if (len(enemies) == 0):
+        player_round += 1
+        # Change number of enemies based on rounds
+        if ENEMY_ROWS < (MAX_ENEMY_ROWS + 1):
+            ENEMY_ROWS += 1
+        if ENEMY_COLUMNS <= (MAX_ENEMY_COLUMNS + 1):
+            ENEMY_COLUMNS += 1
+
+        reset_enemy_positions()
+        create_number_of_enemies(ENEMY_ROWS, ENEMY_COLUMNS, ENEMY_SPACING)
+        create_enemies()
 
 
 # Create sprite groups
@@ -227,7 +262,7 @@ while running:
         else:
             continue
 
-    render_score(screen)
+    render_score_card(screen)
 
     for index, projectile in enumerate(projectiles):
         projectile.move_up(dt)
@@ -245,23 +280,21 @@ while running:
         if collided_enemy:
             projectiles.remove(projectile)
             enemies.remove(collided_enemy)
+
             player_score += 20
 
-        if len(enemies) < num_of_enemies / 2:
+        if len(enemies) <= math.floor(num_of_enemies / 2):
             for enemy in enemies:
                 enemy.speed_x += ENEMY_SPEED_X
-            num_of_enemies /= 2
+                enemy.speed_y += ENEMY_SPEED_Y
+            num_of_enemies = math.floor(num_of_enemies / 2)
 
-    if (len(enemies) == 0):
-        create_enemies()
+    check_number_of_enemies(enemies)
 
     # RENDER YOUR GAME HERE
     pygame.draw.circle(screen, PLAYER_COLOR, player_pos, PLAYER_SIZE)
 
     # Render Enemies
-    '''
-    The enemies would randomly shoot particles towards the player side.
-    '''
     enemy_last_shot_time = Enemy.shoot_projectiles(
         enemies,
         enemy_projectiles,
@@ -276,7 +309,12 @@ while running:
         update_high_score()
         # Reset game State variables
         reset_game()
-        pass
+
+    if check_enemy_passed_player(player_pos, enemies):
+        # Update High Schore
+        update_high_score()
+        # Reset game State variables
+        reset_game()
 
     move_enemies_sideways()
 
