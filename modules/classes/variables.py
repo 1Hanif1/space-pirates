@@ -1,6 +1,7 @@
 # Screen dimensions
 SCREEN_WIDTH = 500
 SCREEN_HEIGHT = 500
+AUDIO_SRC = "./Assets/Sounds"
 
 # Font Properties
 FONT_COLOR = (255, 255, 255)
