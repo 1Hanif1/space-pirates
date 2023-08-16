@@ -10,7 +10,17 @@ from modules.helper.playership import PlayerShip
 from modules.helper.enemyship import EnemyShip
 
 pygame.init()
+
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Space pirates ~ Mo (Github: @1Hanif1)")
+
+icon = pygame.image.load("Assets/Images/alien_ship.png")
+pygame.display.set_icon(icon)
+
+shoot = pygame.mixer.Sound(f"{AUDIO_SRC}/jet-fire.wav")
+enemy_down = pygame.mixer.Sound(f"{AUDIO_SRC}/enemy-beaten.wav")
+game_over = pygame.mixer.Sound(f"{AUDIO_SRC}/game-over.wav")
+
 clock = pygame.time.Clock()
 
 player_pos = pygame.Vector2(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 50)
@@ -231,6 +241,11 @@ player_ship = PlayerShip(player_pos)
 all_sprites.add(player_ship)
 player_group.add(player_ship)
 
+bg_music = pygame.mixer.music.load('./Assets/Sounds/bg-music.wav')
+pygame.mixer.music.set_volume(1)
+pygame.mixer.music.play(-1)
+
+game_state = True
 
 while running:
     # poll for events
@@ -242,6 +257,29 @@ while running:
     # fill the screen with a color to wipe away anything from last frame
     # screen.fill("white")
     screen.blit(background_image, (0, 0))
+    keys = pygame.key.get_pressed()
+
+    if not game_state:
+        text_surface = font.render(f"Game Over!", True, FONT_COLOR)
+        text_rect = text_surface.get_rect()
+        text_rect.center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+        screen.blit(text_surface, text_rect)
+
+        text_surface = font.render(f"Press SPACE to replay!", True, FONT_COLOR)
+        text_rect = text_surface.get_rect()
+        text_rect.center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + SCREEN_HEIGHT / 8)
+        screen.blit(text_surface, text_rect)
+
+        render_score_card(screen)
+        
+        pygame.display.flip()
+        keys = pygame.key.get_pressed()
+        # dt = clock.tick(30) / 1000  # limits FPS to 60
+        if keys[pygame.K_SPACE]:
+            game_state = True
+            reset_game()  # Transition to game loop
+        continue
+        
 
     if is_starting_page:
         (
@@ -261,7 +299,8 @@ while running:
             is_starting_page = False  # Transition to game loop
         else:
             continue
-
+    
+    pygame.mixer.music.set_volume(0)
     render_score_card(screen)
 
     for index, projectile in enumerate(projectiles):
@@ -278,6 +317,7 @@ while running:
         # Check for collision with enemies
         collided_enemy = projectile.check_collision(enemies)
         if collided_enemy:
+            enemy_down.play()
             projectiles.remove(projectile)
             enemies.remove(collided_enemy)
 
@@ -307,14 +347,17 @@ while running:
     if check_enemy_projectile_collision(enemy_projectiles, player_pos):
         # Update High Schore
         update_high_score()
-        # Reset game State variables
-        reset_game()
+        # Game Over Screen
+        game_over.play()
+        game_state = False
+        
 
     if check_enemy_passed_player(player_pos, enemies):
         # Update High Schore
         update_high_score()
         # Reset game State variables
-        reset_game()
+        game_over.play()
+        game_state = False
 
     move_enemies_sideways()
 
@@ -322,23 +365,24 @@ while running:
 
     move_enemies_downwards()
 
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_w]:
+    
+    if keys[pygame.K_w] or keys[pygame.K_UP] :
         # Shoot projectiles
         current_time = pygame.time.get_ticks()  # Get the current time in milliseconds
         if current_time - last_shot_time >= PROJECTILE_COOLDOWN:  # 500 milliseconds cooldown
             new_projectile = Projectile(player_pos.x, player_pos.y)
             projectiles.append(new_projectile)
+            shoot.play()
             last_shot_time = current_time
     if keys[pygame.K_s]:
         # Maybe add a power up system to have once in a while AoE attack
         pass
-    if keys[pygame.K_a]:
+    if keys[pygame.K_a] or keys[pygame.K_LEFT]:
         # Check if we have hit a wall
         left_pos = player_pos.x - 200 * dt
         if not left_pos < PLAYER_SIZE:
             player_pos.x = left_pos
-    if keys[pygame.K_d]:
+    if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
         # Check if we have hit a wall
         right_pos = player_pos.x + 200 * dt
         if not right_pos + PLAYER_SIZE >= SCREEN_WIDTH:
@@ -350,6 +394,6 @@ while running:
     # flip() the display to put your work on screen
     pygame.display.flip()
 
-    dt = clock.tick(60) / 1000  # limits FPS to 60
+    dt = clock.tick(30) / 1000  # limits FPS to 60
 
 pygame.quit()
