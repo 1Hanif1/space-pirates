@@ -267,11 +267,12 @@ while running:
 
         text_surface = font.render(f"Press SPACE to replay!", True, FONT_COLOR)
         text_rect = text_surface.get_rect()
-        text_rect.center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + SCREEN_HEIGHT / 8)
+        text_rect.center = (
+            SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + SCREEN_HEIGHT / 8)
         screen.blit(text_surface, text_rect)
 
         render_score_card(screen)
-        
+
         pygame.display.flip()
         keys = pygame.key.get_pressed()
         # dt = clock.tick(30) / 1000  # limits FPS to 60
@@ -279,7 +280,6 @@ while running:
             game_state = True
             reset_game()  # Transition to game loop
         continue
-        
 
     if is_starting_page:
         (
@@ -299,7 +299,7 @@ while running:
             is_starting_page = False  # Transition to game loop
         else:
             continue
-    
+
     pygame.mixer.music.set_volume(0)
     render_score_card(screen)
 
@@ -350,7 +350,6 @@ while running:
         # Game Over Screen
         game_over.play()
         game_state = False
-        
 
     if check_enemy_passed_player(player_pos, enemies):
         # Update High Schore
@@ -365,8 +364,7 @@ while running:
 
     move_enemies_downwards()
 
-    
-    if keys[pygame.K_w] or keys[pygame.K_UP] :
+    if keys[pygame.K_w] or keys[pygame.K_UP]:
         # Shoot projectiles
         current_time = pygame.time.get_ticks()  # Get the current time in milliseconds
         if current_time - last_shot_time >= PROJECTILE_COOLDOWN:  # 500 milliseconds cooldown
